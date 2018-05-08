@@ -1,0 +1,123 @@
+<project default="post-build" basedir=".">
+	<property name="name" value="SHsync" />
+	<property name="src" location="${basedir}/src" />
+	<property name="build" location="${basedir}/build" />
+	<property name="classes" location="${build}/classes" />
+	<property name="swt" location="${basedir}/swtlib" />
+
+	<path id="classpath">
+		<fileset dir="${basedir}/lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<condition property="isWindows" value="true">
+		<os family="windows" />
+	</condition>
+	<condition property="isUnix" value="true">
+		<os family="unix" />
+	</condition>
+	<condition property="is86" value="true">
+		<or>
+			<os arch="x86" />
+			<os arch="i386" />
+			<os arch="i586" />
+			<os arch="i686" />
+		</or>
+	</condition>
+	<condition property="is64" value="true">
+		<or>
+			<os arch="amd64" />
+			<os arch="x86_64" />
+		</or>
+	</condition>	
+		
+	<target name="clean" description="Cleaning build directories">
+		<echo>Begin pre-build clean</echo>
+		<delete dir="${classes}" />
+		<delete file="${build}/${name}.jar" />
+		<delete file="${basedir}/lib/swt.jar" />
+	</target>
+	
+	<target name="win32" if="isWindows" unless="is64">
+		<copy file="${basedir}/swtlib/swt_win32.jar" todir="${basedir}/lib" />
+		<move file="${basedir}/lib/swt_win32.jar" tofile="${basedir}/lib/swt.jar" />
+		<echo message="SWT lib for Win32 copied" />
+	</target>
+	
+	<target name="win64" if="isWindows" unless="is86">
+		<copy file="${basedir}/swtlib/swt_win64.jar" todir="${basedir}/lib" />
+		<move file="${basedir}/lib/swt_win64.jar" tofile="${basedir}/lib/swt.jar" />
+		<echo message="SWT lib for Win64 copied" />
+	</target>
+	
+	<target name="linux32" if="isUnix" unless="is64">
+		<copy file="${basedir}/swtlib/swt_linux32.jar" todir="${basedir}/lib" />
+		<move file="${basedir}/lib/swt_linux32.jar" tofile="${basedir}/lib/swt.jar" />
+		<echo message="SWT lib for Linux 32 copied" />
+	</target>
+	
+	<target name="linux64" if="isUnix" unless="is86">
+		<copy file="${basedir}/swtlib/swt_linux64.jar" todir="${basedir}/lib" />
+		<move file="${basedir}/lib/swt_linux64.jar" tofile="${basedir}/lib/swt.jar" />
+		<echo message="SWT lib for Linux 64 copied" />
+	</target>
+	
+	<target name="mac">
+		<copy file="${basedir}/swtlib/swt_yosemite.jar" todir="${basedir}/lib" />
+		<move file="${basedir}/lib/swt_yosemite.jar" tofile="${basedir}/lib/swt.jar" />
+		<echo message="SWT lib for Mac OS X Yosemite copied" />
+	</target>
+	
+	<target name="swtselect" description="Detecting JNI GUI lib" depends="clean">
+		<echo>Check OS version</echo>
+		<echo message="${os.name} ${os.arch} detected" />
+		<antcall target="win32" />
+		<antcall target="win64" />
+		<antcall target="linux32" />
+		<antcall target="linux64" />
+		<!-- Uncomment for Mac OS X build
+		<antcall target="mac" />
+		-->
+	</target>
+	
+	<target name="make" description="Build executable files" depends="swtselect">
+		<echo>Begin build</echo>
+		<mkdir dir="${classes}" />	
+		<echo>Begin project compilation</echo>
+		<javac  srcdir="${src}"
+				destdir="${classes}"
+				debug="false"
+				deprecation="true"
+				optimize="true"
+				classpathref="classpath"
+				includeantruntime="false"
+		>
+		</javac>	
+		<jar destfile="${build}/${name}.jar">
+			<fileset dir="${classes}">
+				<include name="**/*.class" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="com.r44r1.shsync.MainWindow" />
+			<!--	<attribute name="Class-Path" value="./lib/" /> -->
+				<attribute name="Class-Path" 
+					value="./lib/jaudiotagger.jar
+						./lib/sqlite-jdbc.jar
+						./lib/swt.jar" />
+			</manifest>
+		</jar>
+	</target>
+	
+	
+	<target name="post-build" description="Post-build tasks" depends="make">
+		<echo>Begin post-build tasks</echo>
+		<delete dir="${classes}" />
+		<mkdir dir="${build}/lib" />
+		<copy todir="${build}/lib">
+			<fileset dir="${basedir}/lib" />
+			<regexpmapper from="^([a-z-]+)(-[0-9]+.*)?\.jar" to="\1\.jar" casesensitive="no" />
+		</copy>
+		<delete file="${basedir}/lib/swt.jar" />
+	</target>
+</project>
