@@ -172,7 +172,16 @@ public class MainWindow {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				phonePath = FileOps.openSD(shell);		
-				dbQuery = FileOps.checkDB(shell);
+				try{
+					dbQuery = FileOps.checkDB(shell);
+				}
+				catch (Exception x) {
+					MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR | SWT.OK);
+					messageBox.setText("Error");
+					messageBox.setMessage("Error occured while creating database.\n"
+							+ "Please, check permissions and try again.");
+					messageBox.open();
+				}
 			}
 		});
 		mntmOpenPhone.setText("Open Phone");

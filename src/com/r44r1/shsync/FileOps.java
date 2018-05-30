@@ -72,10 +72,30 @@ public class FileOps {
 		return path;
 	}
 	
-	public static Statement checkDB (Shell shell) {
+	public static Statement checkDB (Shell shell) throws IOException {
 		File songsDB = new File(getPath("db"));
 		if (!songsDB.exists()) {
+			InputStream dbRes = null;
+			FileOutputStream cleanDB = null;
 			//TODO: copy empty DB file
+			try {
+				dbRes = FileOps.class.getResourceAsStream("/res/ldb.db");
+				int read;
+				byte[] buffer = new byte[4096];
+				try{
+					cleanDB = new FileOutputStream(getPath("db"));
+				} catch (Exception e)
+				{
+					throw e;
+				}
+				while ((read = dbRes.read(buffer)) > 0) {
+					cleanDB.write(buffer,0,read);
+				}
+				cleanDB.close();
+			}
+			finally {
+				dbRes.close();
+			}
 		};
 		return DBOps.attachDB(shell);
 	}
@@ -145,7 +165,6 @@ public class FileOps {
 	        dstChannel = new FileOutputStream(dstFile).getChannel();
 	        dstChannel.transferFrom(srcChannel, 0, srcChannel.size());
 	    } catch (IOException e) {
-	    	e.printStackTrace();
 	    	return "fail";
 	    } finally {
 	           srcChannel.close();

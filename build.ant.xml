@@ -93,11 +93,12 @@
 				classpathref="classpath"
 				includeantruntime="false"
 		>
-		</javac>	
+		</javac>
 		<jar destfile="${build}/${name}.jar">
 			<fileset dir="${classes}">
 				<include name="**/*.class" />
 			</fileset>
+			<fileset dir="." includes="res/**" />
 			<manifest>
 				<attribute name="Main-Class" value="com.r44r1.shsync.MainWindow" />
 			<!--	<attribute name="Class-Path" value="./lib/" /> -->
